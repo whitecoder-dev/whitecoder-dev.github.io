@@ -1,1 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>WhiteCoder Arcade — Premium Break</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+/* ── RESET & TOKENS (From index3.html) ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;
+  --bg2:#111111;
+  --surface:rgba(255,255,255,0.04);
+  --surface2:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08);
+  --border2:rgba(255,255,255,0.12);
+  --text:#f0ede8;
+  --text2:rgba(240,237,232,0.55);
+  --text3:rgba(240,237,232,0.28);
+  --accent:#9b9b9b;
+  --accent2:#9c9c9c;
+  --green:#22c55e;
+  --cyan: #00f0ff;
+  --r:20px;
+  --r-sm:12px;
+  --nav-h:64px;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  --spring:cubic-bezier(0.34,1.56,0.64,1);
+  --font-serif:'Instrument Serif',Georgia,serif;
+  --font-sans:'Geist',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  cursor:none;
+}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:none;border:none}
+::selection{background:rgba(232,213,176,0.25)}
+
+/* ── CUSTOM CURSOR ── */
+#cur-dot,#cur-ring{
+  position:fixed;pointer-events:none;z-index:99999;
+  border-radius:50%;transform:translate(-50%,-50%);
+}
+#cur-dot{
+  width:5px;height:5px;background:var(--accent);
+  transition:transform 0.08s,width 0.25s,height 0.25s;
+}
+#cur-ring{
+  width:32px;height:32px;
+  border:1px solid rgba(232,213,176,0.3);
+  transition:width 0.3s var(--spring),height 0.3s var(--spring),border-color 0.3s;
+}
+body.ch #cur-dot{width:8px;height:8px}
+body.ch #cur-ring{width:46px;height:46px;border-color:rgba(232,213,176,0.6)}
+body.cc #cur-dot{transform:translate(-50%,-50%) scale(0.5)}
+@media(hover:none),(pointer:coarse){#cur-dot,#cur-ring{display:none}body{cursor:auto}button,a{cursor:pointer}}
+
+/* ── GRAIN ── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:99990;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  background-size:200px;opacity:0.6;
+}
+
+/* ── PRELOADER ── */
+#preloader{
+  position:fixed;inset:0;background:var(--bg);
+  z-index:99998;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;
+  transition:opacity 0.9s var(--ease),visibility 0.9s;
+}
+#preloader.done{opacity:0;visibility:hidden;pointer-events:none}
+.pre-logo{font-family:var(--font-serif);font-size:2rem;color:var(--text);letter-spacing:-0.01em}
+.pre-logo em{font-style:italic;color:var(--accent2)}
+.pre-line{width:80px;height:1px;background:var(--border2);border-radius:1px;overflow:hidden}
+.pre-fill{height:100%;width:0;background:var(--accent2);animation:pfill 2.2s var(--ease) forwards}
+@keyframes pfill{0%{width:0}60%{width:70%}100%{width:100%}}
+
+/* ── BOTTOM NAVIGATION ── */
+#bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  z-index:1000;
+  display:flex;justify-content:center;
+  padding:0 20px 20px;
+  pointer-events:none;
+}
+.nav-pill{
+  pointer-events:all;
+  display:flex;align-items:center;gap:2px;
+  background:rgba(10,10,10,0.88);
+  backdrop-filter:blur(28px) saturate(1.8);-webkit-backdrop-filter:blur(28px) saturate(1.8);
+  border:1px solid var(--border2);
+  border-radius:100px;
+  padding:8px 8px;
+  box-shadow:0 8px 48px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.nav-logo-area{
+  display:flex;align-items:center;
+  font-family:var(--font-serif);font-size:0.95rem;color:var(--text);
+  padding:6px 16px 6px 10px;
+  border-right:1px solid var(--border);
+  margin-right:4px;
+}
+.nav-logo-area em{font-style:italic;color:var(--accent2)}
+.nav-links{display:flex;gap:2px;list-style:none}
+.nav-links a{
+  font-size:0.8rem;font-weight:400;color:var(--text2);
+  padding:7px 14px;border-radius:100px;transition:0.2s;
+}
+.nav-links a:hover, .nav-links a.active{background:var(--surface2);color:var(--text)}
+.nav-cta-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--accent);color:#0a0a0a;
+  border-radius:100px;padding:8px 20px;
+  font-size:0.8rem;font-weight:600;
+  margin-left:4px;transition:0.2s;
+}
+.nav-cta-btn:hover{background:var(--accent2);transform:scale(1.02)}
+
+@media (max-width: 700px) {
+  .nav-logo-area, .nav-links { display: none; }
+  .nav-pill { gap: 6px; padding: 10px 14px; justify-content: space-between; width: 100%; max-width: 400px; }
+  .mob-nav-icons { display: flex; align-items: center; justify-content: space-around; width: 100%; }
+  .mob-icon-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; color: var(--text2); padding: 8px 12px; border-radius: 14px; font-size: 0.6rem; transition: 0.2s; }
+  .mob-icon-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .mob-icon-btn:hover, .mob-icon-btn.active { background: var(--surface2); color: var(--text); }
+  .nav-cta-btn { display: none; }
+}
+@media (min-width: 701px) { .mob-nav-icons { display: none; } }
+
+/* ── HEADER (HERO STYLE) ── */
+.header { text-align: center; padding: 120px 20px 60px; position: relative; z-index: 2; }
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:0.72rem;font-weight:400;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--text3);
+  border:1px solid var(--border);border-radius:100px;
+  padding:6px 16px;margin-bottom:24px;
+}
+.header h1 { font-family: var(--font-serif); font-size: clamp(3rem, 8vw, 5rem); margin-bottom: 10px; line-height: 1; letter-spacing:-0.02em; }
+.header h1 em { font-style: italic; color: var(--accent2); }
+.header p { color: var(--text2); font-size: 1.1rem; font-weight: 300; max-width: 500px; margin: 0 auto 30px; }
+
+/* ── GAMES GRID ── */
+.games-wrap { max-width: 1200px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px) 120px; z-index: 2; position: relative;}
+.games-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+
+/* ── APPLE GLASS GAME CARDS ── */
+.game-card {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 30px;
+  display: flex; flex-direction: column; align-items: center;
+  transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.game-card:hover { border-color: var(--border2); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+.game-title { font-family: var(--font-serif); font-size: 2rem; margin-bottom: 20px; color: var(--text); letter-spacing: -0.02em;}
+.game-title em { font-style: italic; }
+
+.score-board { margin-bottom: 15px; font-family: monospace; font-size: 1.1rem; color: var(--text2); }
+.score-board span { color: var(--text); font-weight: bold; font-size: 1.3rem;}
+
+/* Cyber Snake */
+canvas { background: #050505; border: 1px solid var(--border2); border-radius: 12px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+.mobile-controls { display: none; grid-template-columns: 50px 50px 50px; gap: 10px; margin-top: 20px; }
+.btn-pad { width: 50px; height: 50px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 1.2rem; cursor: pointer; transition: 0.2s;}
+.btn-pad:active { background: var(--text); color: #000; }
+
+/* Memory Game */
+.memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.mem-card { width: 65px; height: 65px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; cursor: pointer; transition: transform 0.3s, background 0.3s; transform-style: preserve-3d; }
+.mem-card.flipped { background: rgba(255, 255, 255, 0.1); border-color: var(--text2); transform: rotateY(180deg); }
+.mem-card.matched { background: rgba(34, 197, 94, 0.15); border-color: var(--green); opacity: 0.8; cursor: default; }
+.mem-card i { opacity: 0; transition: opacity 0.3s; transform: rotateY(180deg); color: var(--text); }
+.mem-card.flipped i, .mem-card.matched i { opacity: 1; }
+
+/* Tic Tac Toe */
+.ttt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+.ttt-cell { width: 80px; height: 80px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-family: var(--font-sans); font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text); }
+.ttt-cell:hover { background: rgba(255,255,255,0.1); }
+.ttt-cell.x { color: var(--cyan); }
+.ttt-cell.o { color: var(--green); }
+
+.game-btn { margin-top: 20px; padding: 12px 28px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-weight: 500; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+.game-btn:hover { background: var(--text); color: var(--bg); transform: scale(1.05); }
+
+/* ── FOOTER (From index3.html) ── */
+footer{ background:var(--bg2); border-top:1px solid var(--border); padding:64px 0 calc(var(--nav-h) + 60px); position: relative; z-index: 2;}
+.footer-inner{ display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr; gap:48px;align-items:start; max-width: 1100px; margin: 0 auto; padding: 0 clamp(20px,4vw,48px); }
+.footer-brand{font-family:var(--font-serif);font-size:1.1rem;color:var(--text);letter-spacing:-0.01em;margin-bottom:12px}
+.footer-brand em{font-style:italic;color:var(--accent2)}
+.footer-desc{font-size:0.8rem;color:var(--text3);line-height:1.7;font-weight:300;max-width:240px}
+.footer-col-title{font-size:0.66rem;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);margin-bottom:16px}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px}
+.footer-links a{font-size:0.82rem;color:var(--text2);font-weight:300;transition:color 0.2s}
+.footer-links a:hover{color:var(--text)}
+.footer-bottom{ margin-top:52px;padding-top:24px;border-top:1px solid var(--border); display:flex;justify-content:space-between;align-items:center; font-size:0.75rem;color:var(--text3);font-weight:300; max-width: 1100px; margin-left: auto; margin-right: auto; padding-left: clamp(20px,4vw,48px); padding-right: clamp(20px,4vw,48px);}
+
+@media(max-width: 900px) {
+  .mobile-controls { display: grid; }
+  .mobile-controls div { grid-column: 2; }
+  .footer-inner{grid-template-columns:1fr 1fr;gap:32px}
+}
+@media(max-width: 700px) {
+  .footer-inner{grid-template-columns:1fr}
+  .footer-bottom{flex-direction:column;gap:12px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+
+<div id="preloader">
+  <div class="pre-logo">White<em>Coder</em></div>
+  <div class="pre-line"><div class="pre-fill"></div></div>
+  <div class="pre-sub">Arcade Mode Loading</div>
+</div>
+
+<nav id="bottom-nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-pill">
+    <div class="nav-logo-area">White<em>Coder</em></div>
+    <ul class="nav-links" role="list">
+      <li><a href="index.html">Portfolio</a></li>
+      <li><a href="#" class="active">Arcade</a></li>
+    </ul>
+    <a href="index.html" class="nav-cta-btn">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back
+    </a>
+    
+    <div class="mob-nav-icons">
+      <a href="index.html" class="mob-icon-btn">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="#" class="mob-icon-btn active">
+        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/></svg>
+        <span>Games</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="header">
+  <div class="hero-eyebrow">Take a Break</div>
+  <h1>Arcade <em>Mode.</em></h1>
+  <p>Step away from the code. Clear your mind with some retro-inspired mini games.</p>
+</div>
+
+<div class="games-wrap">
+  <div class="games-container">
+
+    <div class="game-card">
+      <h2 class="game-title">Cyber <em>Snake</em></h2>
+      <div class="score-board">Score: <span id="snake-score" style="color: var(--cyan)">0</span></div>
+      <canvas id="snake-canvas" width="280" height="280"></canvas>
+      <button class="game-btn" onclick="startSnake()">Restart Game</button>
+      
+      <div class="mobile-controls">
+        <div style="grid-column: 2;"><button class="btn-pad" onclick="changeDir(0, -1)"><i class="fa-solid fa-caret-up"></i></button></div>
+        <button class="btn-pad" style="grid-column: 1;" onclick="changeDir(-1, 0)"><i class="fa-solid fa-caret-left"></i></button>
+        <button class="btn-pad" style="grid-column: 3;" onclick="changeDir(1, 0)"><i class="fa-solid fa-caret-right"></i></button>
+        <div style="grid-column: 2;"><button class="btn-pad" onclick="changeDir(0, 1)"><i class="fa-solid fa-caret-down"></i></button></div>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <h2 class="game-title">Tech <em>Match</em></h2>
+      <div class="score-board">Moves: <span id="mem-moves" style="color: var(--green)">0</span></div>
+      <div class="memory-grid" id="memory-grid"></div>
+      <button class="game-btn" onclick="initMemoryGame()">Restart Game</button>
+    </div>
+
+    <div class="game-card">
+      <h2 class="game-title">Tic <em>Tac Toe</em></h2>
+      <div class="score-board">Status: <span id="ttt-status">X's Turn</span></div>
+      <div class="ttt-grid" id="ttt-grid">
+        <div class="ttt-cell" onclick="makeMove(0)"></div>
+        <div class="ttt-cell" onclick="makeMove(1)"></div>
+        <div class="ttt-cell" onclick="makeMove(2)"></div>
+        <div class="ttt-cell" onclick="makeMove(3)"></div>
+        <div class="ttt-cell" onclick="makeMove(4)"></div>
+        <div class="ttt-cell" onclick="makeMove(5)"></div>
+        <div class="ttt-cell" onclick="makeMove(6)"></div>
+        <div class="ttt-cell" onclick="makeMove(7)"></div>
+        <div class="ttt-cell" onclick="makeMove(8)"></div>
+      </div>
+      <button class="game-btn" onclick="resetTTT()">Restart Game</button>
+    </div>
+
+  </div>
+</div>
+
+<footer role="contentinfo">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">White<em>Coder</em></div>
+      <p class="footer-desc">Premium web experiences, AI solutions and developer tools. Based in Sri Lanka.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Navigate</div>
+      <ul class="footer-links" role="list">
+        <li><a href="index.html">Portfolio Home</a></li>
+        <li><a href="#">Arcade Mode</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Connect</div>
+      <ul class="footer-links" role="list">
+        <li><a href="https://github.com/oshandageethanjana" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://youtube.com/@whitecoder" target="_blank" rel="noopener">YouTube</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2025 WhiteCoder. All rights reserved.</span>
+    <a href="https://whitecoder.online" target="_blank" rel="noopener" style="color:var(--text3);transition:0.2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">whitecoder.online</a>
+  </div>
+</footer>
+
+<script>
+  /* ── UI SCRIPTS (Preloader, Cursor) ── */
+  window.addEventListener('load',()=>{ setTimeout(()=>document.getElementById('preloader').classList.add('done'),1500); });
+
+  const dot=document.getElementById('cur-dot'),ring=document.getElementById('cur-ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px'});
+  (function loop(){rx+=(mx-rx)*0.12;ry+=(my-ry)*0.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop)})();
+  document.querySelectorAll('a, button, .mem-card, .ttt-cell, .btn-pad').forEach(el=>{
+    el.addEventListener('mouseenter',()=>document.body.classList.add('ch'));
+    el.addEventListener('mouseleave',()=>document.body.classList.remove('ch'));
+  });
+  document.addEventListener('mousedown',()=>document.body.classList.add('cc'));
+  document.addEventListener('mouseup',()=>document.body.classList.remove('cc'));
+
+  // Prevent arrow keys scrolling
+  window.addEventListener("keydown", function(e) {
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
+  }, false);
+
+  /* =========================================
+      GAME 1: CYBER SNAKE
+  ========================================= */
+  const canvas = document.getElementById("snake-canvas");
+  const ctx = canvas.getContext("2d");
+  const box = 14; 
+  let snake, food, d, score, gameLoop;
+
+  function startSnake() {
+    clearInterval(gameLoop);
+    snake = [];
+    snake[0] = { x: 9 * box, y: 10 * box };
+    food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
+    score = 0;
+    d = "RIGHT";
+    document.getElementById("snake-score").innerText = score;
+    gameLoop = setInterval(drawSnake, 120);
+  }
+
+  document.addEventListener("keydown", direction);
+  function direction(event) {
+    if(event.keyCode == 37 && d != "RIGHT") d = "LEFT";
+    else if(event.keyCode == 38 && d != "DOWN") d = "UP";
+    else if(event.keyCode == 39 && d != "LEFT") d = "RIGHT";
+    else if(event.keyCode == 40 && d != "UP") d = "DOWN";
+  }
+
+  function changeDir(dx, dy) {
+    if(dx === -1 && d != "RIGHT") d = "LEFT";
+    else if(dx === 1 && d != "LEFT") d = "RIGHT";
+    else if(dy === -1 && d != "DOWN") d = "UP";
+    else if(dy === 1 && d != "UP") d = "DOWN";
+  }
+
+  function collision(head, array) {
+    for(let i = 0; i < array.length; i++) {
+      if(head.x == array[i].x && head.y == array[i].y) return true;
+    }
+    return false;
+  }
+
+  function drawSnake() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for(let i = 0; i < snake.length; i++) {
+      ctx.fillStyle = (i == 0) ? "#00f0ff" : "rgba(255, 255, 255, 0.4)";
+      ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      ctx.strokeStyle = "#050505";
+      ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+    }
+
+    ctx.fillStyle = "#ff0055"; 
+    ctx.fillRect(food.x, food.y, box, box);
+
+    let snakeX = snake[0].x;
+    let snakeY = snake[0].y;
+
+    if(d == "LEFT") snakeX -= box;
+    if(d == "UP") snakeY -= box;
+    if(d == "RIGHT") snakeX += box;
+    if(d == "DOWN") snakeY += box;
+
+    if(snakeX == food.x && snakeY == food.y) {
+      score++;
+      document.getElementById("snake-score").innerText = score;
+      food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
+    } else {
+      snake.pop(); 
+    }
+
+    let newHead = { x: snakeX, y: snakeY };
+
+    if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
+      clearInterval(gameLoop);
+      ctx.fillStyle = "white";
+      ctx.font = "20px var(--font-sans)";
+      ctx.fillText("GAME OVER", 80, 140);
+      return;
+    }
+    snake.unshift(newHead);
+  }
+  startSnake();
+
+  /* =========================================
+      GAME 2: TECH MATCH (MEMORY)
+  ========================================= */
+  const icons = [
+    "fa-brands fa-php", "fa-brands fa-php",
+    "fa-brands fa-js", "fa-brands fa-js",
+    "fa-brands fa-python", "fa-brands fa-python",
+    "fa-brands fa-aws", "fa-brands fa-aws",
+    "fa-brands fa-docker", "fa-brands fa-docker",
+    "fa-brands fa-linux", "fa-brands fa-linux",
+    "fa-brands fa-github", "fa-brands fa-github",
+    "fa-brands fa-react", "fa-brands fa-react"
+  ];
+
+  let firstCard = null, secondCard = null, lockBoard = false, moves = 0, matchedPairs = 0;
+
+  function initMemoryGame() {
+    const grid = document.getElementById("memory-grid");
+    grid.innerHTML = "";
+    moves = 0; matchedPairs = 0;
+    document.getElementById("mem-moves").innerText = moves;
+    
+    let shuffled = icons.sort(() => 0.5 - Math.random());
+
+    shuffled.forEach(iconClass => {
+      const card = document.createElement("div");
+      card.classList.add("mem-card");
+      card.dataset.icon = iconClass;
+      card.innerHTML = `<i class="${iconClass}"></i>`;
+      card.addEventListener("click", flipCard);
+      // add cursor styles dynamically
+      card.addEventListener('mouseenter',()=>document.body.classList.add('ch'));
+      card.addEventListener('mouseleave',()=>document.body.classList.remove('ch'));
+      grid.appendChild(card);
+    });
+  }
+
+  function flipCard() {
+    if (lockBoard) return;
+    if (this === firstCard) return;
+
+    this.classList.add("flipped");
+
+    if (!firstCard) {
+      firstCard = this;
+      return;
+    }
+
+    secondCard = this;
+    moves++;
+    document.getElementById("mem-moves").innerText = moves;
+    checkForMatch();
+  }
+
+  function checkForMatch() {
+    let isMatch = firstCard.dataset.icon === secondCard.dataset.icon;
+    if (isMatch) {
+      disableCards();
+      matchedPairs++;
+      if(matchedPairs === 8) {
+        document.getElementById("mem-moves").innerText = moves + " (You Won!)";
+      }
+    } else {
+      unflipCards();
+    }
+  }
+
+  function disableCards() {
+    firstCard.removeEventListener("click", flipCard);
+    secondCard.removeEventListener("click", flipCard);
+    firstCard.classList.add("matched");
+    secondCard.classList.add("matched");
+    resetBoard();
+  }
+
+  function unflipCards() {
+    lockBoard = true;
+    setTimeout(() => {
+      firstCard.classList.remove("flipped");
+      secondCard.classList.remove("flipped");
+      resetBoard();
+    }, 1000);
+  }
+
+  function resetBoard() { [firstCard, secondCard, lockBoard] = [null, null, false]; }
+  initMemoryGame();
+
+  /* =========================================
+      GAME 3: TIC TAC TOE
+  ========================================= */
+  let tttBoard = ["", "", "", "", "", "", "", "", ""];
+  let tttPlayer = "X";
+  let tttActive = true;
+  const statusDisplay = document.getElementById("ttt-status");
+  const winConditions = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // cols
+    [0, 4, 8], [2, 4, 6]             // diagonals
+  ];
+
+  function makeMove(index) {
+    if (tttBoard[index] !== "" || !tttActive) return;
+    
+    tttBoard[index] = tttPlayer;
+    let cell = document.getElementsByClassName("ttt-cell")[index];
+    cell.innerText = tttPlayer;
+    cell.classList.add(tttPlayer.toLowerCase()); // Add class 'x' or 'o' for color
+
+    checkWin();
+  }
+
+  function checkWin() {
+    let won = false;
+    for (let i = 0; i < winConditions.length; i++) {
+      const [a, b, c] = winConditions[i];
+      if (tttBoard[a] && tttBoard[a] === tttBoard[b] && tttBoard[a] === tttBoard[c]) {
+        won = true;
+        break;
+      }
+    }
+
+    if (won) {
+      statusDisplay.innerText = tttPlayer + " Wins!";
+      statusDisplay.style.color = tttPlayer === 'X' ? 'var(--cyan)' : 'var(--green)';
+      tttActive = false;
+      return;
+    }
+
+    if (!tttBoard.includes("")) {
+      statusDisplay.innerText = "It's a Draw!";
+      statusDisplay.style.color = "var(--text)";
+      tttActive = false;
+      return;
+    }
+
+    tttPlayer = tttPlayer === "X" ? "O" : "X";
+    statusDisplay.innerText = tttPlayer + "'s Turn";
+    statusDisplay.style.color = "var(--text)";
+  }
+
+  function resetTTT() {
+    tttBoard = ["", "", "", "", "", "", "", "", ""];
+    tttPlayer = "X";
+    tttActive = true;
+    statusDisplay.innerText = "X's Turn";
+    statusDisplay.style.color = "var(--text)";
+    let cells = document.getElementsByClassName("ttt-cell");
+    for (let i = 0; i < cells.length; i++) {
+      cells[i].innerText = "";
+      cells[i].classList.remove("x", "o");
+    }
+  }
+</script>
+</body>
+</html>
