@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+
+  <!-- ══ Primary SEO ══ -->
+  <title>Copilot — Live Interview Session | WhiteCoder Copilot</title>
+  <meta name="description" content="Live AI interview session — real-time speech transcription via Deepgram, instant translation in Sinhala, Tamil, Chinese, French, Spanish and German, plus AI-crafted answers streamed word by word."/>
+  <meta name="keywords" content="AI interview copilot live session, real-time interview assistant, Deepgram transcription, Gemini AI answers, interview translation, WhiteCoder, Oshanda Geethanjana"/>
+  <meta name="author" content="Oshanda Geethanjana — WhiteCoder"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <meta name="theme-color" content="#08090c"/>
+  <meta name="color-scheme" content="dark"/>
+
+  <!-- ══ Open Graph ══ -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://whitecoder-copilot.vercel.app/copilot.html"/>
+  <meta property="og:title" content="Copilot — Live Session | WhiteCoder Copilot"/>
+  <meta property="og:description" content="Start a live AI interview session. Real-time transcription, translation and answer generation — streamed word by word."/>
+  <meta property="og:image" content="/WhiteCoder_Copilot-logo.png"/>
+  <meta property="og:image:alt" content="WhiteCoder Copilot"/>
+  <meta property="og:site_name" content="WhiteCoder Copilot"/>
+
+  <!-- ══ Twitter Card ══ -->
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="Copilot — Live Session | WhiteCoder Copilot"/>
+  <meta name="twitter:description" content="Real-time AI interview assistant. Transcription, translation, instant answers."/>
+  <meta name="twitter:image" content="/WhiteCoder_Copilot-logo.png"/>
+
+  <!-- ══ Favicon ══ -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/WhiteCoder_Copilot-logo.png"/>
+  <link rel="apple-touch-icon" href="/WhiteCoder_Copilot-logo.png"/>
+  <link rel="shortcut icon" href="/WhiteCoder_Copilot-logo.png"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #08090c;
+      --surface:      #0f1117;
+      --surface2:     #161920;
+      --surface3:     #1c2028;
+      --border:       rgba(255,255,255,0.07);
+      --border-hi:    rgba(255,255,255,0.13);
+      --accent:       #4f8ef7;
+      --accent-glow:  rgba(79,142,247,0.18);
+      --accent2:      #22d3a0;
+      --accent2-glow: rgba(34,211,160,0.14);
+      --warn:         #f5a623;
+      --danger:       #f05252;
+      --text:         #e8eaf0;
+      --text2:        #8b90a0;
+      --text3:        #474d5c;
+      --radius:       14px;
+      --radius-sm:    8px;
+      --font:         'DM Sans', system-ui, sans-serif;
+      --mono:         'DM Mono', monospace;
+    }
+
+    html { height: 100%; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100%; overflow-x: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 15% 5%,  rgba(79,142,247,0.07) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 35% at 85% 90%, rgba(34,211,160,0.05) 0%, transparent 65%);
+    }
+
+    /* ══════════════════════════════════════
+       SPLASH SCREEN
+    ══════════════════════════════════════ */
+    #splash {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 22px;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .splash-logo-wrap {
+      position: relative; width: 96px; height: 96px;
+    }
+    .splash-ring {
+      position: absolute; inset: -7px; border-radius: 34px;
+      background: conic-gradient(from 0deg, #4f8ef7 0%, #22d3a0 50%, #4f8ef7 100%);
+      animation: spinRing 1.8s linear infinite;
+    }
+    @keyframes spinRing { to { transform: rotate(360deg); } }
+    .splash-ring::after {
+      content: ''; position: absolute; inset: 3px;
+      background: var(--bg); border-radius: 29px;
+    }
+    .splash-logo-img {
+      position: relative; z-index: 2;
+      width: 96px; height: 96px; border-radius: 24px; object-fit: cover;
+      animation: logoPop 0.5s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes logoPop { from { opacity:0; transform:scale(0.5); } to { opacity:1; transform:scale(1); } }
+
+    .splash-name {
+      font-size: 20px; font-weight: 700; letter-spacing: -0.4px; color: var(--text);
+      animation: fadeUp 0.5s 0.25s ease both;
+    }
+    .splash-name span { color: var(--accent); }
+    .splash-sub {
+      font-size: 12px; color: var(--text3); letter-spacing: 0.04em;
+      animation: fadeUp 0.5s 0.35s ease both;
+    }
+
+    /* Dots loader */
+    .splash-dots {
+      display: flex; gap: 8px;
+      animation: fadeUp 0.5s 0.45s ease both;
+    }
+    .splash-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent); opacity: 0.3;
+      animation: dotBounce 1.2s ease-in-out infinite;
+    }
+    .splash-dot:nth-child(1) { animation-delay: 0s; }
+    .splash-dot:nth-child(2) { animation-delay: 0.2s; }
+    .splash-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce {
+      0%,80%,100% { opacity: 0.3; transform: scale(1); }
+      40%         { opacity: 1;   transform: scale(1.35); background: var(--accent2); }
+    }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ══════════════════════════════════════
+       MAIN APP
+    ══════════════════════════════════════ */
+    #page { opacity: 0; transition: opacity 0.45s ease; }
+    #page.show { opacity: 1; }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px;
+      background: rgba(8,9,12,0.92);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .topbar-logo-img { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
+    .topbar-logo-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .topbar-logo-name span { color: var(--accent); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .topbar-back {
+      font-size: 13px; color: var(--text2); text-decoration: none;
+      padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .topbar-back:hover { color: var(--text); border-color: var(--border-hi); }
+
+    /* Lang switcher */
+    .lang-group {
+      display: flex; align-items: center; gap: 3px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 3px;
+    }
+    .lang-label { font-size: 10px; color: var(--text3); padding: 0 6px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .lang-btn {
+      font-family: var(--font); font-size: 11px; font-weight: 500;
+      color: var(--text2); background: transparent; border: none;
+      border-radius: 5px; padding: 4px 9px; cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .lang-btn:hover { background: var(--surface3); color: var(--text); }
+    .lang-btn.active { background: var(--accent); color: #fff; }
+
+    /* ── Layout ── */
+    .app {
+      position: relative; z-index: 1;
+      max-width: 860px; margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 13px 18px;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--text3); flex-shrink: 0; transition: background 0.3s;
+    }
+    .status-dot.active     { background: var(--accent2); box-shadow: 0 0 0 4px var(--accent2-glow); animation: statusPulse 2s ease-in-out infinite; }
+    .status-dot.listening  { background: var(--accent);  box-shadow: 0 0 0 4px var(--accent-glow);  animation: statusPulse 1.2s ease-in-out infinite; }
+    .status-dot.processing { background: var(--warn);    box-shadow: 0 0 0 4px rgba(245,166,35,0.2); animation: statusPulse 0.8s ease-in-out infinite; }
+    @keyframes statusPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+    .status-text { font-size: 13px; color: var(--text2); flex: 1; }
+    .status-text strong { color: var(--text); font-weight: 500; }
+    .timer { font-family: var(--mono); font-size: 13px; color: var(--text3); letter-spacing: 0.06em; display: none; }
+    .timer.visible { display: block; }
+
+    /* Waveform */
+    .waveform { display: flex; align-items: center; gap: 3px; height: 18px; opacity: 0; transition: opacity 0.3s; flex-shrink: 0; }
+    .waveform.active { opacity: 1; }
+    .wave-bar { width: 3px; background: var(--accent); border-radius: 2px; animation: wave 1.2s ease-in-out infinite; }
+    .wave-bar:nth-child(1){animation-delay:0s}
+    .wave-bar:nth-child(2){animation-delay:.15s}
+    .wave-bar:nth-child(3){animation-delay:.3s}
+    .wave-bar:nth-child(4){animation-delay:.15s}
+    .wave-bar:nth-child(5){animation-delay:0s}
+    @keyframes wave { 0%,100%{height:4px} 50%{height:16px} }
+
+    /* ── Controls ── */
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      font-family: var(--font); font-size: 14px; font-weight: 500;
+      padding: 12px 22px; border-radius: var(--radius-sm); border: none;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+      transition: background 0.15s, transform 0.1s, opacity 0.15s; user-select: none;
+    }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .btn-start { background: var(--accent); color: #fff; }
+    .btn-start:hover:not(:disabled) { background: #3a7ef0; }
+    .btn-stop  { background: rgba(240,82,82,0.12); color: var(--danger); border: 1px solid rgba(240,82,82,0.22); }
+    .btn-stop:hover:not(:disabled)  { background: rgba(240,82,82,0.22); }
+
+    /* ── Transcript panel ── */
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; transition: border-color 0.3s;
+    }
+    .panel.active { border-color: rgba(79,142,247,0.28); }
+    .panel-head {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px 10px; border-bottom: 1px solid var(--border);
+    }
+    .tag { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 5px; padding: 3px 8px; }
+    .tag-blue  { color: var(--accent);  background: var(--accent-glow); }
+    .tag-green { color: var(--accent2); background: var(--accent2-glow); }
+    .panel-title { font-size: 12px; color: var(--text2); }
+    .panel-body  { padding: 16px; min-height: 68px; }
+
+    #finalText   { font-size: 15px; color: var(--text);  line-height: 1.65; }
+    #interimText { font-size: 15px; color: var(--text3); font-style: italic; }
+    .placeholder { font-size: 13px; color: var(--text3); font-style: italic; }
+
+    /* ── AI response grid ── */
+    .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) { .ai-grid { grid-template-columns: 1fr; } }
+
+    .resp-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;
+    }
+    .resp-head {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 14px 9px; border-bottom: 1px solid var(--border);
+    }
+    .resp-icon {
+      width: 22px; height: 22px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .resp-icon.amber { background: rgba(245,166,35,0.14); }
+    .resp-icon.green { background: var(--accent2-glow); }
+    .resp-icon svg { width: 13px; height: 13px; }
+    .resp-label { font-size: 12px; font-weight: 500; color: var(--text2); }
+    .resp-body  { padding: 16px; flex: 1; font-size: 14px; line-height: 1.72; color: var(--text); min-height: 90px; }
+    .resp-body em { color: var(--text3); font-style: italic; font-size: 13px; }
+
+    /* Typing cursor */
+    .cursor {
+      display: inline-block; width: 2px; height: 13px;
+      background: var(--accent2); margin-left: 2px;
+      vertical-align: middle; border-radius: 1px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── AI Processing animation overlay ── */
+    .thinking-bar {
+      height: 2px; width: 100%;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+      background-size: 200% 100%;
+      animation: thinkingSlide 1.2s linear infinite;
+      display: none;
+    }
+    .thinking-bar.active { display: block; }
+    @keyframes thinkingSlide { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── History ── */
+    .history-section { margin-top: 4px; }
+    .history-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 10px; padding: 0 2px;
+    }
+    .history-list { display: flex; flex-direction: column; gap: 10px; }
+    .history-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+      transition: border-color 0.15s;
+    }
+    .history-item:hover { border-color: var(--border-hi); }
+    .history-q { font-size: 12px; color: var(--text3); margin-bottom: 4px; font-style: italic; }
+    .history-t { font-size: 13px; color: var(--text); margin-bottom: 8px; }
+    .history-a { font-size: 13px; color: var(--accent2); line-height: 1.6; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: rgba(240,82,82,0.14); border: 1px solid rgba(240,82,82,0.3);
+      color: #f9a8a8; font-size: 13px; padding: 10px 18px; border-radius: 10px;
+      opacity: 0; transition: opacity 0.22s, transform 0.22s;
+      pointer-events: none; z-index: 200;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Info ── */
+    .info-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text3); padding: 0 2px; }
+    .info-row svg { width: 13px; height: 13px; opacity: 0.4; flex-shrink: 0; }
+
+    /* ── Topbar typing pill ── */
+    .typing-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 100px; padding: 4px 12px 4px 10px;
+      font-size: 12px; color: var(--text3);
+    }
+    .typing-pill-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent2); flex-shrink: 0;
+      animation: pillPulse 2s ease-in-out infinite;
+    }
+    @keyframes pillPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+    .typing-pill-text {
+      font-family: var(--mono); font-size: 11px; color: var(--accent2);
+      min-width: 96px;
+    }
+    .typing-cursor-char {
+      display: inline-block; width: 1.5px; height: 11px;
+      background: var(--accent2); margin-left: 1px;
+      vertical-align: middle; border-radius: 1px;
+      animation: blink2 0.9s step-end infinite;
+    }
+    @keyframes blink2 { 0%,100%{opacity:1} 50%{opacity:0} }
+    @media (max-width: 700px) { .typing-pill { display: none; } }
+
+
+
+    /* Live Transcript Box Styles */
+    .full-transcript-box {
+      position: fixed;
+      right: 20px;
+      top: 100px; 
+      width: 320px;
+      max-height: 60vh;
+      background: rgba(17, 20, 26, 0.95);
+      border: 1px solid #2a2e38;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      color: #e2e8f0;
+      z-index: 9999;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    .full-transcript-box h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #00ffcc;
+      border-bottom: 1px solid #2a2e38;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #fullTranscriptText {
+      overflow-y: auto;
+      flex-grow: 1;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 768px) {
+      .full-transcript-box {
+        position: relative;
+        right: auto;
+        top: auto;
+        width: 100%;
+        margin-top: 20px;
+        max-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+  <div class="splash-logo-wrap">
+    <div class="splash-ring"></div>
+    <img class="splash-logo-img" src="/WhiteCoder_Copilot-logo.png" alt="WhiteCoder Copilot"/>
+  </div>
+  <div class="splash-name">White<span>Coder</span> Copilot</div>
+  <div class="splash-sub">Connecting to AI engine&hellip;</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="page">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <a href="/index.html" class="topbar-logo">
+      <img class="topbar-logo-img" src="/WhiteCoder_Copilot-logo.png" alt="Logo"/>
+      <span class="topbar-logo-name">White<span>Coder</span> Copilot</span>
+    </a>
+    <div class="topbar-right">
+      <!-- Typing languages pill -->
+      <div class="typing-pill">
+        <div class="typing-pill-dot"></div>
+        <span class="typing-pill-text" id="copilotTyping"><span class="typing-cursor-char"></span></span>
+      </div>
+      <div class="lang-group">
+        <span class="lang-label">Lang</span>
+        <button class="lang-btn active" data-lang="si">සිං</button>
+        <button class="lang-btn" data-lang="ta">தமிழ்</button>
+        <button class="lang-btn" data-lang="zh">中</button>
+        <button class="lang-btn" data-lang="fr">FR</button>
+        <button class="lang-btn" data-lang="es">ES</button>
+        <button class="lang-btn" data-lang="de">DE</button>
+      </div>
+      <a href="/index.html" class="topbar-back">&larr; Home</a>
+    </div>
+  </div>
+
+  <!-- Thinking bar (shown during AI processing) -->
+  <div class="thinking-bar" id="thinkingBar"></div>
+
+  <div class="app">
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <div class="status-text" id="statusText"><strong>Ready</strong> &mdash; click Start to begin your session</div>
+      <div class="waveform" id="waveform">
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+      <div class="timer" id="timer">00:00</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-start" id="startBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Start &mdash; Share Tab Audio
+      </button>
+      <button class="btn btn-stop" id="stopBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        Stop Session
+      </button>
+    </div>
+
+    <!-- Live transcript -->
+    <div class="panel" id="transcriptPanel">
+      <div class="panel-head">
+        <span class="tag tag-blue">Live</span>
+        <span class="panel-title">Interviewer speech &mdash; real-time</span>
+      </div>
+      <div class="panel-body">
+        <span id="finalText"></span><span id="interimText"></span>
+        <span class="placeholder" id="placeholder">Waiting for audio&hellip;</span>
+      </div>
+    </div>
+
+    <!-- AI Response -->
+    <div class="ai-grid">
+      <div class="resp-card">
+        <div class="resp-head">
+          <div class="resp-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+            </svg>
+          </div>
+          <span class="resp-label" id="translationLabel">Sinhala Translation</span>
+        </div>
+        <div class="resp-body" id="translationText"><em>Translation will appear here&hellip;</em></div>
+      </div>
+
+      <div class="resp-card">
+        <div class="resp-head">
+          <div class="resp-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22d3a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <span class="resp-label">Suggested Answer</span>
+        </div>
+        <div class="resp-body" id="answerText"><em>Your answer will appear here&hellip;</em></div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="history-section" id="historySection" style="display:none">
+      <div class="history-title">Session History</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- Info -->
+    <div class="info-row">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      Audio is processed via Deepgram STT &amp; Gemini AI. Session data is not stored.
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="fullTranscriptContainer" class="full-transcript-box">
+  <h4>Live Transcript</h4>
+  <div id="fullTranscriptText"></div>
+</div>
+
+<script>
+
+
+  let fullContinuousTranscript = "";
+
+
+(function () {
+  'use strict';
+
+  /* ── Splash: wait for socket to connect then reveal app ── */
+  var splashEl = document.getElementById('splash');
+  var pageEl   = document.getElementById('page');
+
+  /* ── Language config ── */
+  var LANG_LABELS = {
+    si: 'Sinhala Translation',
+    ta: 'Tamil Translation',
+    zh: 'Chinese Translation',
+    fr: 'French Translation',
+    es: 'Spanish Translation',
+    de: 'German Translation'
+  };
+  var currentLang = 'si';
+
+  /* ── Socket ── */
+  var socket = io();
+
+  /* Reveal page once socket connects (or after 2.5s max) */
+  var revealed = false;
+  function revealApp() {
+    if (revealed) return;
+    revealed = true;
+    splashEl.classList.add('hide');
+    pageEl.classList.add('show');
+  }
+  socket.on('connect', function () {
+    setTimeout(revealApp, 600); /* tiny delay so animation feels intentional */
+  });
+  setTimeout(revealApp, 2500); /* fallback */
+
+  /* ── Topbar multilingual typing ── */
+  (function () {
+    var phrases = [
+      'සිංහල',
+      'தமிழ்',
+      '中文',
+      'Français',
+      'Español',
+      'Deutsch'
+    ];
+    var typingEl  = document.getElementById('copilotTyping');
+    var cursor    = '<span class="typing-cursor-char"></span>';
+    var pIdx = 0, cIdx = 0, del = false, pause = 0;
+    var TYPE = 75, DEL = 40, WAIT_FULL = 26, WAIT_EMPTY = 8;
+
+    function tick() {
+      if (pause > 0) { pause--; setTimeout(tick, del ? DEL : TYPE); return; }
+      var word = phrases[pIdx];
+      if (!del) {
+        cIdx++;
+        typingEl.innerHTML = word.substring(0, cIdx) + cursor;
+        if (cIdx === word.length) { del = true; pause = WAIT_FULL; }
+        setTimeout(tick, TYPE);
+      } else {
+        cIdx--;
+        typingEl.innerHTML = word.substring(0, cIdx) + cursor;
+        if (cIdx === 0) { del = false; pause = WAIT_EMPTY; pIdx = (pIdx + 1) % phrases.length; }
+        setTimeout(tick, DEL);
+      }
+    }
+    setTimeout(tick, 1800);
+  })();
+
+  /* ── DOM refs ── */
+  var finalTextEl      = document.getElementById('finalText');
+  var interimTextEl    = document.getElementById('interimText');
+  var placeholderEl    = document.getElementById('placeholder');
+  var translationDiv   = document.getElementById('translationText');
+  var answerDiv        = document.getElementById('answerText');
+  var translationLabel = document.getElementById('translationLabel');
+  var statusDot        = document.getElementById('statusDot');
+  var statusTextEl     = document.getElementById('statusText');
+  var waveformEl       = document.getElementById('waveform');
+  var timerEl          = document.getElementById('timer');
+  var transcriptPanel  = document.getElementById('transcriptPanel');
+  var startBtn         = document.getElementById('startBtn');
+  var stopBtn          = document.getElementById('stopBtn');
+  var toastEl          = document.getElementById('toast');
+  var thinkingBar      = document.getElementById('thinkingBar');
+  var historySection   = document.getElementById('historySection');
+  var historyList      = document.getElementById('historyList');
+
+  /* ── Session history ── */
+  var sessionHistory = [];
+  var lastQuestion   = '';
+
+  /* ── Language switcher ── */
+  document.querySelectorAll('.lang-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      currentLang = btn.getAttribute('data-lang');
+      document.querySelectorAll('.lang-btn').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-lang') === currentLang);
+      });
+      translationLabel.textContent = LANG_LABELS[currentLang] || 'Translation';
+      socket.emit('set_lang', currentLang);
+    });
+  });
+
+  /* ── Timer ── */
+  var timerInterval = null;
+  var elapsedSec = 0;
+  function startTimer() {
+    elapsedSec = 0; timerEl.classList.add('visible');
+    timerInterval = setInterval(function () {
+      elapsedSec++;
+      var m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+      var s = String(elapsedSec % 60).padStart(2, '0');
+      timerEl.textContent = m + ':' + s;
+    }, 1000);
+  }
+  function stopTimer() { clearInterval(timerInterval); timerInterval = null; timerEl.classList.remove('visible'); }
+
+  /* ── Status ── */
+  function setStatus(type, html) {
+    statusDot.className = 'status-dot' + (type ? ' ' + type : '');
+    statusTextEl.innerHTML = html;
+    waveformEl.classList.toggle('active', type === 'listening');
+  }
+
+  /* ── Toast ── */
+  var toastTimeout = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(function () { toastEl.classList.remove('show'); }, 4500);
+  }
+
+  /* ── Helpers ── */
+  function showPlaceholder(show) { placeholderEl.style.display = show ? 'inline' : 'none'; }
+  function clearCursors() { document.querySelectorAll('.cursor').forEach(function (c) { c.remove(); }); }
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── History ── */
+  function addToHistory(question, translation, answer) {
+    if (!question || !answer) return;
+    sessionHistory.unshift({ question: question, translation: translation, answer: answer });
+    if (sessionHistory.length > 10) sessionHistory.pop();
+    historySection.style.display = 'block';
+    historyList.innerHTML = '';
+    sessionHistory.forEach(function (item) {
+      var div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML =
+        '<div class="history-q">Q: ' + escapeHtml(item.question) + '</div>' +
+        '<div class="history-t">T: ' + escapeHtml(item.translation) + '</div>' +
+        '<div class="history-a">A: ' + escapeHtml(item.answer) + '</div>';
+      historyList.appendChild(div);
+    });
+  }
+
+  /* ── Socket events ── */
+  socket.on('transcript_update', function (data) {
+    showPlaceholder(false);
+    transcriptPanel.classList.add('active');
+    
+    if (data.isFinal) {
+      lastQuestion += data.text + ' ';
+      finalTextEl.textContent += data.text + ' ';
+      interimTextEl.textContent = '';
+
+      // 👇 මේ තියෙන්නේ අලුතින් දාපු පියවර 4 කොටස 👇
+      if (data.text) { 
+        fullContinuousTranscript += data.text + " ";
+        const transcriptDiv = document.getElementById('fullTranscriptText');
+        if(transcriptDiv) {
+          transcriptDiv.innerHTML = fullContinuousTranscript;
+          transcriptDiv.scrollTop = transcriptDiv.scrollHeight; // Auto-scroll වෙන්න
+        }
+      }
+      // ☝️ අලුත් කොටස ඉවරයි ☝️
+
+    } else {
+      interimTextEl.textContent = data.text;
+    }
+    
+    setStatus('listening', '<strong>Listening</strong> &mdash; capturing speech');
+  });
+
+  var currentTranslation = '';
+  var currentAnswer = '';
+
+  socket.on('ai_processing', function () {
+    currentTranslation = '';
+    currentAnswer = '';
+    translationDiv.innerHTML = '<em>Translating&hellip;</em>';
+    answerDiv.innerHTML      = '<em>Crafting your answer&hellip;</em>';
+    thinkingBar.classList.add('active');
+    setStatus('processing', '<strong>Thinking</strong> &mdash; AI is generating your response');
+  });
+
+  // 1. සිංහල ටික එනකොට අල්ලගන්නවා (වෙනමම)
+  socket.on('ai_translation_chunk', function (chunk) {
+    if (currentTranslation === '') translationDiv.innerHTML = '';
+    currentTranslation += chunk;
+    clearCursors();
+    translationDiv.innerHTML = currentTranslation.replace(/\n/g, '<br>') + '<span class="cursor"></span>';
+  });
+
+  // 2. ඉංග්‍රීසි ටික එනකොට අල්ලගන්නවා (වෙනමම)
+  socket.on('ai_answer_chunk', function (chunk) {
+    if (currentAnswer === '') answerDiv.innerHTML = '';
+    currentAnswer += chunk;
+    clearCursors();
+    answerDiv.innerHTML = currentAnswer.replace(/\n/g, '<br>') + '<span class="cursor"></span>';
+  });
+
+  socket.on('ai_stream_end', function () {
+    clearCursors();
+    thinkingBar.classList.remove('active');
+    var q = lastQuestion.trim();
+    if (q) addToHistory(q, currentTranslation, currentAnswer);
+    lastQuestion              = '';
+    finalTextEl.textContent   = '';
+    interimTextEl.textContent = '';
+    showPlaceholder(true);
+    transcriptPanel.classList.remove('active');
+    setStatus('active', '<strong>Ready</strong> &mdash; waiting for next question');
+  });
+
+  socket.on('ai_error', function (msg) {
+    clearCursors();
+    thinkingBar.classList.remove('active');
+    showToast('AI Error: ' + msg);
+    setStatus('', '<strong>Error</strong> &mdash; check server logs');
+  });
+
+  socket.on('disconnect', function () {
+    setStatus('', '<strong>Disconnected</strong> &mdash; reload to reconnect');
+  });
+
+  /* ── MediaRecorder ── */
+  var mediaRecorder = null;
+  var activeStream  = null;
+
+  startBtn.addEventListener('click', startSession);
+  stopBtn.addEventListener('click',  stopSession);
+
+  async function startSession() {
+    try {
+      var stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      activeStream = stream;
+
+      var audioTracks = stream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        showToast('No audio detected. Tick "Share Tab Audio" in the share dialog.');
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        activeStream = null;
+        return;
+      }
+
+      socket.emit('set_lang', currentLang);
+
+      var audioOnlyStream = new MediaStream([audioTracks[0]]);
+      var mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', '']
+        .find(function (m) { return !m || MediaRecorder.isTypeSupported(m); }) || '';
+
+      mediaRecorder = mimeType
+        ? new MediaRecorder(audioOnlyStream, { mimeType: mimeType })
+        : new MediaRecorder(audioOnlyStream);
+
+      mediaRecorder.addEventListener('dataavailable', function (e) {
+        if (e.data && e.data.size > 0 && socket.connected) socket.emit('audio_stream', e.data);
+      });
+      mediaRecorder.addEventListener('error', function (e) {
+        showToast('Recorder error: ' + (e.error ? e.error.message : 'unknown'));
+      });
+
+      mediaRecorder.start(250);
+      startBtn.disabled = true;
+      stopBtn.disabled  = false;
+      setStatus('active', '<strong>Connected</strong> &mdash; session live');
+      startTimer();
+
+      stream.getTracks().forEach(function (track) {
+        track.addEventListener('ended', stopSession);
+      });
+
+    } catch (err) {
+      if (err.name !== 'NotAllowedError' && err.name !== 'AbortError') {
+        showToast('Could not start capture: ' + err.message);
+      }
+      console.error('[startSession]', err);
+    }
+  }
+
+  function stopSession() {
+
+
+    fullContinuousTranscript = "";
+    document.getElementById('fullTranscriptText').innerHTML = "";
+
+
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') { try { mediaRecorder.stop(); } catch (_) {} }
+    if (activeStream) {
+      activeStream.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} });
+      activeStream = null;
+    }
+    mediaRecorder = null;
+    startBtn.disabled = false;
+    stopBtn.disabled  = true;
+    stopTimer();
+    thinkingBar.classList.remove('active');
+    waveformEl.classList.remove('active');
+    setStatus('', '<strong>Session ended</strong> &mdash; click Start to begin again');
+    finalTextEl.textContent   = '';
+    interimTextEl.textContent = '';
+    showPlaceholder(true);
+    transcriptPanel.classList.remove('active');
+  }
+
+})();
+</script>
+</body>
+</html>
