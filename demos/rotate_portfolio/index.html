@@ -28,7 +28,7 @@
             background-color: var(--bg-color);
         }
 
-        /* --- Loading Animation --- */
+        /* --- Premium Loading Animation --- */
         #loader {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -57,21 +57,22 @@
             visibility: hidden; 
         }
 
-        /* --- Smooth Background Color Change --- */
+        /* --- Full Page Smooth Background Color Glow (Fixed Box Issue) --- */
         .bg-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            /* වර්ණය සම්පූර්ණ තිරයටම යොදා ඇත */
             background-color: var(--active-color);
-            filter: blur(120px);
-            opacity: 0.3; 
+            opacity: 0.18; 
             transition: background-color 1.2s cubic-bezier(0.25, 1, 0.5, 1);
-            border-radius: 50%;
             z-index: 0;
             pointer-events: none;
+            /* Box එකක් සේ පෙනීම වැළැක්වීමට Mask එකක් මගින් Fade කර ඇත */
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 75%);
+            mask-image: radial-gradient(circle at center, black 0%, transparent 75%);
         }
 
         .app-container {
@@ -240,17 +241,13 @@
             .app-container {
                 max-width: 800px;
             }
-            .bg-glow {
-                width: 500px;
-                height: 500px;
-                filter: blur(180px);
-            }
             .brand-name { font-size: 1.4rem; letter-spacing: 6px; }
             .subtitle { font-size: 0.9rem; }
             
-            .profile-center { width: 150px; height: 150px; }
-            .icon-item { width: 70px; height: 70px; }
-            .icon-item img { width: 36px; height: 36px; }
+            /* Desktop සදහා Icons සහ Wheel එක විශාල කිරීම */
+            .profile-center { width: 160px; height: 160px; }
+            .icon-item { width: 75px; height: 75px; }
+            .icon-item img { width: 38px; height: 38px; }
             .bottom-nav { width: 50%; padding: 22px 45px; }
         }
     </style>
@@ -290,7 +287,7 @@
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.getElementById('loader').classList.add('loader-hidden');
-            }, 600); // 600ms delay for a premium smooth reveal
+            }, 600); // Premium smooth reveal
         });
 
         const linksData = [
@@ -306,7 +303,7 @@
 
         const wheel = document.getElementById('wheel');
         let iconElements = [];
-        let radius = window.innerWidth > 768 ? 240 : 155; // Responsive radius
+        let radius = window.innerWidth > 768 ? 260 : 155; // Desktop/Mobile Responsive Radius
 
         // 1. Build Wheel
         function buildWheel() {
@@ -332,9 +329,9 @@
             updatePositions();
         }
 
-        // Update positions smoothly on resize
+        // Update positions smoothly on resize (Responsive flex behavior)
         function updatePositions() {
-            radius = window.innerWidth > 768 ? 240 : 155;
+            radius = window.innerWidth > 768 ? 260 : 155;
             iconElements.forEach(item => {
                 const x = Math.sin(item.angle) * radius;
                 const y = -Math.cos(item.angle) * radius;
@@ -396,7 +393,7 @@
             if (!isDragging) return;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const deltaX = clientX - startX;
-            targetAngle += deltaX * 0.6; // slightly increased sensitivity
+            targetAngle += deltaX * 0.6; // Drag sensitivity
             dragDistance += Math.abs(deltaX);
             startX = clientX;
         }
